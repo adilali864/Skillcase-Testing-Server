@@ -63,6 +63,6 @@ app.use("/api/tts", authMiddleware, ttsRouter);
 app.use("/api/resume", authMiddleware, resumeRouter);
 app.use("/api/pdf", pdfRoutes);
 
-app.listen(4000, () => {
-  console.log("server is running at http://localhost:4000");
+app.listen(3000, () => {
+  console.log("server is running at http://localhost:3000");
 });
