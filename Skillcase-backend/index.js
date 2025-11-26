@@ -12,7 +12,6 @@ const ttsRouter = require("./routes/ttsRouter");
 const resumeRouter = require("./routes/resumeRouter");
 const pdfRoutes = require("./routes/pdfRouter");
 
-
 const {
   authMiddleware,
   authorizeRole,
@@ -30,6 +29,7 @@ const allowed_origins = [
   "https://skill-case-frontend.vercel.app",
   "https://learner.skillcase.in",
   "https://skillcase-terms-and-condition.vercel.app",
+  "https://skillcase-testing-server.vercel.app",
 ];
 
 app.use(
@@ -61,7 +61,7 @@ app.use("/api/agreement", agreementRouter);
 app.use("/api/stories", authMiddleware, storyRouter);
 app.use("/api/tts", authMiddleware, ttsRouter);
 app.use("/api/resume", authMiddleware, resumeRouter);
-app.use('/api/pdf', pdfRoutes);
+app.use("/api/pdf", pdfRoutes);
 
 app.listen(4000, () => {
   console.log("server is running at http://localhost:4000");
