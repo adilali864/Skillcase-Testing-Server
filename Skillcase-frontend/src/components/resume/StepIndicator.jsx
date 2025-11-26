@@ -1,0 +1,49 @@
+import React from "react";
+
+export default function StepIndicator({ steps, currentStep, onStepClick }) {
+  return (
+    <div className="w-full py-4 px-4">
+      <div className="flex items-center justify-between w-full">
+        {steps.map((s, idx) => (
+          <React.Fragment key={s.id}>
+            <div className="relative flex flex-col items-center">
+              <button
+                onClick={() => onStepClick(s.id)}
+                className={`z-10 flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all duration-300 cursor-pointer ${
+                  currentStep === s.id
+                    ? "bg-[#1976D2] text-white shadow-md scale-110"
+                    : currentStep > s.id
+                    ? "bg-green-500 text-white"
+                    : "bg-slate-200 text-slate-500"
+                }`}
+              >
+                {s.id}
+              </button>
+
+              <div
+                className={`absolute top-12 w-32 text-center text-xs font-medium transition-colors duration-300 ${
+                  currentStep === s.id ? "text-[#1976D2]" : "text-slate-500"
+                }`}
+                style={{ left: "50%", transform: "translateX(-50%)" }}
+              >
+                {s.title}
+              </div>
+            </div>
+
+            {idx < steps.length - 1 && (
+              <div
+                className={`flex-auto h-1 mx-2 transition-all duration-300 ${
+                  currentStep > s.id + 1 ||
+                  (currentStep > s.id && currentStep > idx + 1)
+                    ? // Logic: If we are past this step, color the line
+                      "bg-green-500"
+                    : "bg-slate-200"
+                }`}
+              />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    </div>
+  );
+}
