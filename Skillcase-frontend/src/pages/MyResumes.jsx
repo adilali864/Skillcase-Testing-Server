@@ -48,8 +48,22 @@ export default function MyResumes() {
     }
   };
   const editResume = async (resumeId) => {
-    // Navigate to AI builder with pre-loaded data
-    navigate(`/resume/edit/${resumeId}`);
+    try {
+      // Fetch the resume data
+      const response = await api.get(`/resume/${resumeId}`);
+      const resumeData = response.data.data;
+      
+      // Navigate to Manual Builder with pre-filled data
+      navigate('/resume/manual-builder', { 
+        state: { 
+          resumeData: resumeData.resume_data,
+          resumeId: resumeId,
+          isEditing: true
+        } 
+      });
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to load resume");
+    }
   };
   if (loading) {
     return (

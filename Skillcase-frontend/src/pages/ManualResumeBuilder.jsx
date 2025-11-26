@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import api from "../api/axios";
@@ -36,21 +36,42 @@ const EMPTY_RESUME = {
 export default function ManualResumeBuilder() {
   const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [editStep, setEditStep] = useState(1);
   const [resumeData, setResumeData] = useState(EMPTY_RESUME);
+  const [resumeId, setResumeId] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  
   useEffect(() => {
     if (!user) navigate("/Login");
-  }, [user, navigate]);
+    
+    // Check if we're editing an existing resume
+    if (location.state?.resumeData) {
+      setResumeData(location.state.resumeData);
+      setResumeId(location.state.resumeId);
+      setIsEditing(location.state.isEditing);
+    }
+  }, [user, navigate, location.state]);
+  
   const updateResumeData = (field, value) => {
     setResumeData((prev) => ({ ...prev, [field]: value }));
   };
   const saveResume = async () => {
     try {
       setLoading(true);
-      await api.post("/resume/save", { resumeData });
-      alert("Resume saved successfully!");
+      
+      if (isEditing && resumeId) {
+        // Update existing resume
+        await api.put(`/resume/${resumeId}`, { resumeData });
+        alert("Resume updated successfully!");
+      } else {
+        // Create new resume
+        await api.post("/resume/save", { resumeData });
+        alert("Resume saved successfully!");
+      }
+      
       navigate("/resume/my-resumes");
     } catch (err) {
       alert(err.response?.data?.message || "Failed to save resume");
