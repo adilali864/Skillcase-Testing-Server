@@ -11,6 +11,7 @@ const storyRouter = require("./routes/storyRouter");
 const ttsRouter = require("./routes/ttsRouter");
 const resumeRouter = require("./routes/resumeRouter");
 const pdfRoutes = require("./routes/pdfRouter");
+const uploadRouter = require("./routes/uploadRouter");
 
 const {
   authMiddleware,
@@ -62,6 +63,7 @@ app.use("/api/stories", authMiddleware, storyRouter);
 app.use("/api/tts", authMiddleware, ttsRouter);
 app.use("/api/resume", authMiddleware, resumeRouter);
 app.use("/api/pdf", pdfRoutes);
+app.use("/api/upload", uploadRouter);
 
 app.listen(3000, () => {
   console.log("server is running at http://localhost:3000");

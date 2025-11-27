@@ -52,14 +52,14 @@ export default function MyResumes() {
       // Fetch the resume data
       const response = await api.get(`/resume/${resumeId}`);
       const resumeData = response.data.data;
-      
-      // Navigate to Manual Builder with pre-filled data
-      navigate('/resume/manual-builder', { 
-        state: { 
+
+      navigate("/resume/manual-builder", {
+        state: {
           resumeData: resumeData.resume_data,
           resumeId: resumeId,
-          isEditing: true
-        } 
+          isEditing: true,
+          startAtPreview: true,
+        },
       });
     } catch (err) {
       alert(err.response?.data?.message || "Failed to load resume");

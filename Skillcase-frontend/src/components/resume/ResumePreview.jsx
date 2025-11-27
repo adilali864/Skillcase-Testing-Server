@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Download, Edit, Loader2 } from "lucide-react";
 import api from "../../api/axios.js";
+import { toast } from "react-hot-toast";
 
 const formatDate = (dateStr) => {
   if (!dateStr) return "";
@@ -44,6 +45,23 @@ export default function ResumePreview({ data, onEdit }) {
     };
   }, [data]);
 
+  // Helper function to convert image to base64
+  const imageToBase64 = async (url) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('Error converting image to base64:', error);
+      return null;
+    }
+  };
+
   const handleDownloadPDF = async () => {
     setIsGenerating(true);
 
@@ -58,6 +76,15 @@ export default function ResumePreview({ data, onEdit }) {
       const clone = resumeElement.cloneNode(true);
       clone.style.transform = "none";
       clone.style.boxShadow = "none";
+
+      // Convert logo image to base64
+      const logoImg = clone.querySelector('img[alt="Skillcase"]');
+      if (logoImg) {
+        const logoBase64 = await imageToBase64('/mainlogo.png');
+        if (logoBase64) {
+          logoImg.src = logoBase64;
+        }
+      }
 
       // Create full HTML document with Tailwind CDN
       const fullHTML = `
@@ -76,10 +103,29 @@ export default function ResumePreview({ data, onEdit }) {
                 font-family: Arial, sans-serif;
                 background: white;
               }
-              /* Ensure proper rendering */
+              
+              /* A4 Page Setup */
               @page {
                 size: A4;
                 margin: 0;
+              }
+              
+              /* Prevent page breaks inside elements */
+              .page-break-avoid {
+                page-break-inside: avoid;
+                break-inside: avoid;
+              }
+              
+              /* Force page break before */
+              .page-break-before {
+                page-break-before: always;
+                break-before: page;
+              }
+              
+              /* Ensure content doesn't overflow */
+              #print-container {
+                width: 210mm;
+                background: white;
               }
             </style>
           </head>
@@ -112,10 +158,10 @@ export default function ResumePreview({ data, onEdit }) {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
-      alert("PDF downloaded successfully!");
+      toast.success("PDF downloaded successfully!");
     } catch (error) {
       console.error("PDF Generation Error:", error);
-      alert(
+      toast.error(
         `Failed to generate PDF: ${
           error.response?.data?.error || error.message
         }`
@@ -193,9 +239,32 @@ export default function ResumePreview({ data, onEdit }) {
             <div
               ref={contentRef}
               id="print-container"
-              className="bg-white shadow-2xl"
+              className="bg-white shadow-2xl relative"
               style={{ width: "210mm", minHeight: "297mm" }}
             >
+              {contentHeight > 1123 && ( // Only show if content exceeds 1 page (1123px ≈ 297mm)
+                <div
+                  className="absolute left-0 right-0 pointer-events-none print:hidden"
+                  style={{ zIndex: 999 }}
+                >
+                  {Array.from(
+                    { length: Math.ceil(contentHeight / 1123) - 1 },
+                    (_, i) => i + 1
+                  ).map((page) => (
+                    <div
+                      key={page}
+                      className="relative"
+                      style={{ height: 0, top: `${page * 297}mm` }}
+                    >
+                      <div className="border-t-2 border-dashed border-red-500 opacity-50"></div>
+                      <span className="absolute right-4 -top-3 bg-red-500 text-white px-3 py-1 text-xs font-semibold rounded shadow-lg">
+                        Page {page} Break
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <EuropassResumeTemplate data={data} />
             </div>
           </div>
@@ -220,18 +289,13 @@ function EuropassResumeTemplate({ data }) {
 
   return (
     <div className="flex min-h-[297mm] bg-white font-sans text-black relative">
-      {/* Europass Logo */}
+      {/* Skillcase Logo */}
       <div className="absolute top-4 right-6 flex items-center space-x-2 z-10">
-        <div className="flex items-center space-x-1">
-          <div className="w-6 h-6 bg-[#003776] rounded-sm flex items-center justify-center">
-            <div className="w-4 h-4 bg-[#FFD617] rounded-sm flex items-center justify-center">
-              <div className="w-2 h-2 bg-white rounded-full"></div>
-            </div>
-          </div>
-          <span className="text-[#7B2D8E] font-bold text-lg tracking-wide">
-            europass
-          </span>
-        </div>
+        <img
+          src="/mainlogo.png"
+          alt="Skillcase"
+          className="h-24 w-auto object-contain pr-6 -mt-6"
+        />
       </div>
 
       {/* Left Sidebar */}
@@ -291,7 +355,7 @@ function EuropassResumeTemplate({ data }) {
               <div className="space-y-1 relative">
                 <div className="absolute left-[6px] top-0 bottom-0 w-[2px] bg-[#003399]"></div>
                 {education.map((edu) => (
-                  <TimelineItem key={edu.id}>
+                  <TimelineItem key={edu.id} className="page-break-avoid">
                     <div className="font-extrabold text-[#003399] text-xs mb-1">
                       {edu.startYear} – {edu.endYear}
                       {edu.location && (
@@ -314,7 +378,7 @@ function EuropassResumeTemplate({ data }) {
               <div className="space-y-1 relative">
                 <div className="absolute left-[6px] top-0 bottom-0 w-[2px] bg-[#003399]"></div>
                 {experience.map((exp) => (
-                  <TimelineItem key={exp.id}>
+                  <TimelineItem key={exp.id} className="page-break-avoid">
                     <div className="font-extrabold text-[#003399] text-xs mb-1">
                       <span style={{ fontWeight: 800 }}>
                         {formatDate(exp.startDate)} –{" "}
@@ -477,9 +541,9 @@ function ResumeSection({ title, children, className = "" }) {
   );
 }
 
-function TimelineItem({ children }) {
+function TimelineItem({ children, className = "" }) {
   return (
-    <div className="relative pl-8 pb-4">
+    <div className={`relative pl-8 pb-4 ${className}`}>
       <div className="absolute left-0 top-6 flex items-center justify-center">
         <div className="w-3 h-3 bg-[#003776] rounded-full"></div>
       </div>

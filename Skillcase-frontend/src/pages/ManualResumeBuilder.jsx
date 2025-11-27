@@ -43,25 +43,29 @@ export default function ManualResumeBuilder() {
   const [resumeId, setResumeId] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   useEffect(() => {
     if (!user) navigate("/Login");
-    
+
     // Check if we're editing an existing resume
     if (location.state?.resumeData) {
       setResumeData(location.state.resumeData);
       setResumeId(location.state.resumeId);
       setIsEditing(location.state.isEditing);
+
+      if (location.state.startAtPreview) {
+        setEditStep(5);
+      }
     }
   }, [user, navigate, location.state]);
-  
+
   const updateResumeData = (field, value) => {
     setResumeData((prev) => ({ ...prev, [field]: value }));
   };
   const saveResume = async () => {
     try {
       setLoading(true);
-      
+
       if (isEditing && resumeId) {
         // Update existing resume
         await api.put(`/resume/${resumeId}`, { resumeData });
@@ -71,7 +75,7 @@ export default function ManualResumeBuilder() {
         await api.post("/resume/save", { resumeData });
         alert("Resume saved successfully!");
       }
-      
+
       navigate("/resume/my-resumes");
     } catch (err) {
       alert(err.response?.data?.message || "Failed to save resume");
