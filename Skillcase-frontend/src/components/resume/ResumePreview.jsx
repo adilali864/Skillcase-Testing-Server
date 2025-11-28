@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { Download, Edit, Loader2 } from "lucide-react";
 import api from "../../api/axios.js";
 import { toast } from "react-hot-toast";
@@ -14,36 +14,67 @@ export default function ResumePreview({ data, onEdit }) {
   const parentRef = useRef(null);
   const contentRef = useRef(null);
   const [scale, setScale] = useState(1);
-  const [contentHeight, setContentHeight] = useState(1123);
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // A4 Dimensions in Pixels (approx 96 DPI)
+  const A4_HEIGHT_PX = 1123;
   const A4_WIDTH_PX = 794;
 
+  // State to force the container to be a multiple of A4 height
+  const [forcedHeight, setForcedHeight] = useState(A4_HEIGHT_PX);
+
+  // 1. Resize Handler: Scale the view and Calculate Page Height
+  const handleResize = useCallback(() => {
+    if (parentRef.current && contentRef.current) {
+      // 1. Handle Scaling
+      const parentWidth = parentRef.current.offsetWidth;
+      const newScale =
+        parentWidth < A4_WIDTH_PX ? parentWidth / A4_WIDTH_PX : 1;
+      setScale(newScale);
+
+      // 2. Handle Height Calculation
+      // Temporarily remove fixed height to get natural scrollHeight
+      if (!contentRef.current) return;
+      contentRef.current.style.height = "auto";
+      const naturalHeight = contentRef.current.scrollHeight;
+
+      // Calculate how many pages we need (Round up)
+      const pageCount = Math.ceil(naturalHeight / A4_HEIGHT_PX);
+
+      // Set the new forced height (Pages * 1123px)
+      // We explicitly set this so background styles stretch to the bottom
+      const newForcedHeight = Math.max(pageCount * A4_HEIGHT_PX, A4_HEIGHT_PX);
+      setForcedHeight(newForcedHeight);
+
+      // Re-apply height immediately for visual stability
+      contentRef.current.style.height = `${newForcedHeight}px`;
+    }
+  }, [A4_WIDTH_PX]);
+
   useEffect(() => {
-    const handleResize = () => {
-      if (parentRef.current && contentRef.current) {
-        const parentWidth = parentRef.current.offsetWidth;
-        const newScale =
-          parentWidth < A4_WIDTH_PX ? parentWidth / A4_WIDTH_PX : 1;
-        setScale(newScale);
-
-        setContentHeight(contentRef.current.scrollHeight);
-      }
-    };
-
     handleResize();
     window.addEventListener("resize", handleResize);
-
-    const observer = new ResizeObserver(handleResize);
-    if (contentRef.current) {
-      observer.observe(contentRef.current);
+    let resizeTimeout;
+    const observer = new ResizeObserver(() => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        handleResize();
+      }, 100);
+    });
+    const currentRef = contentRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => {
+      clearTimeout(resizeTimeout);
       window.removeEventListener("resize", handleResize);
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
       observer.disconnect();
     };
-  }, [data]);
+  }, [data, handleResize]);
 
   // Helper function to convert image to base64
   const imageToBase64 = async (url) => {
@@ -57,97 +88,21 @@ export default function ResumePreview({ data, onEdit }) {
         reader.readAsDataURL(blob);
       });
     } catch (error) {
-      console.error('Error converting image to base64:', error);
+      console.error("Error converting image to base64:", error);
       return null;
     }
   };
 
   const handleDownloadPDF = async () => {
     setIsGenerating(true);
-
     try {
-      // Get the resume HTML
-      const resumeElement = document.getElementById("print-container");
-      if (!resumeElement) {
-        throw new Error("Resume content not found");
-      }
-
-      // Clone and prepare HTML
-      const clone = resumeElement.cloneNode(true);
-      clone.style.transform = "none";
-      clone.style.boxShadow = "none";
-
-      // Convert logo image to base64
-      const logoImg = clone.querySelector('img[alt="Skillcase"]');
-      if (logoImg) {
-        const logoBase64 = await imageToBase64('/mainlogo.png');
-        if (logoBase64) {
-          logoImg.src = logoBase64;
-        }
-      }
-
-      // Create full HTML document with Tailwind CDN
-      const fullHTML = `
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <meta charset="UTF-8">
-            <script src="https://cdn.tailwindcss.com"></script>
-            <style>
-              * { 
-                margin: 0; 
-                padding: 0; 
-                box-sizing: border-box; 
-              }
-              body { 
-                font-family: Arial, sans-serif;
-                background: white;
-              }
-              
-              /* A4 Page Setup */
-              @page {
-                size: A4;
-                margin: 0;
-              }
-              
-              /* Prevent page breaks inside elements */
-              .page-break-avoid {
-                page-break-inside: avoid;
-                break-inside: avoid;
-              }
-              
-              /* Force page break before */
-              .page-break-before {
-                page-break-before: always;
-                break-before: page;
-              }
-              
-              /* Ensure content doesn't overflow */
-              #print-container {
-                width: 210mm;
-                background: white;
-              }
-            </style>
-          </head>
-          <body>
-            ${clone.outerHTML}
-          </body>
-        </html>
-      `;
-
-      // Send to backend using axios
+      // Send only resume data (not HTML!)
       const response = await api.post(
         "/pdf/generate-resume",
-        {
-          html: fullHTML,
-          fileName: `${data.personalInfo?.firstName || "Resume"}_Resume`,
-        },
-        {
-          responseType: "blob", // Important for PDF download
-        }
+        { resumeData: data }, // Just the data object
+        { responseType: "blob" }
       );
-
-      // Download the PDF
+      // Create download link
       const blob = new Blob([response.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -157,15 +112,10 @@ export default function ResumePreview({ data, onEdit }) {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-
       toast.success("PDF downloaded successfully!");
     } catch (error) {
       console.error("PDF Generation Error:", error);
-      toast.error(
-        `Failed to generate PDF: ${
-          error.response?.data?.error || error.message
-        }`
-      );
+      toast.error("Failed to generate PDF. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -223,7 +173,8 @@ export default function ResumePreview({ data, onEdit }) {
           style={{
             width: "100%",
             maxWidth: "210mm",
-            height: `${contentHeight * scale}px`,
+            // Use the calculated forced height for the wrapper
+            height: `${forcedHeight * scale}px`,
           }}
         >
           {/* 2. Scale Container (Applies Zoom) */}
@@ -232,23 +183,28 @@ export default function ResumePreview({ data, onEdit }) {
               transform: `scale(${scale})`,
               transformOrigin: "top left",
               width: "210mm",
-              height: `${contentHeight}px`,
+              height: `${forcedHeight}px`,
             }}
           >
-            {/* 3. The Resume Content (Fixed Width, Dynamic Height) */}
+            {/* 3. The Resume Content */}
             <div
               ref={contentRef}
               id="print-container"
               className="bg-white shadow-2xl relative"
-              style={{ width: "210mm", minHeight: "297mm" }}
+              style={{
+                width: "210mm",
+                // Explicitly set the height to the calculated multiple of A4
+                height: `${forcedHeight}px`,
+                position: "relative",
+              }}
             >
-              {contentHeight > 1123 && ( // Only show if content exceeds 1 page (1123px ≈ 297mm)
+              {forcedHeight > A4_HEIGHT_PX && (
                 <div
-                  className="absolute left-0 right-0 pointer-events-none print:hidden"
+                  className="page-break-indicators absolute left-0 right-0 pointer-events-none"
                   style={{ zIndex: 999 }}
                 >
                   {Array.from(
-                    { length: Math.ceil(contentHeight / 1123) - 1 },
+                    { length: forcedHeight / A4_HEIGHT_PX - 1 },
                     (_, i) => i + 1
                   ).map((page) => (
                     <div
@@ -256,9 +212,9 @@ export default function ResumePreview({ data, onEdit }) {
                       className="relative"
                       style={{ height: 0, top: `${page * 297}mm` }}
                     >
-                      <div className="border-t-2 border-dashed border-red-500 opacity-50"></div>
+                      <div className="border-t-2 border-dashed border-red-500 opacity-50 w-full"></div>
                       <span className="absolute right-4 -top-3 bg-red-500 text-white px-3 py-1 text-xs font-semibold rounded shadow-lg">
-                        Page {page} Break
+                        Page {page} End
                       </span>
                     </div>
                   ))}
@@ -288,9 +244,23 @@ function EuropassResumeTemplate({ data }) {
   } = data;
 
   return (
-    <div className="flex min-h-[297mm] bg-white font-sans text-black relative">
+    <div
+      className="resume-content-wrapper flex font-sans text-black relative items-stretch h-full"
+      style={{
+        // IMPORTANT: We remove the background gradient here.
+        // 1. In the Preview: We can add a simple fallback if you want.
+        // 2. In the PDF: The 'print-bg-left' and 'print-bg-right' classes handle it.
+        background: "transparent",
+      }}
+    >
+      {/* PREVIEW MODE BACKGROUNDS: 
+         These absolute divs mimic the PDF fixed backgrounds so the on-screen preview looks correct.
+      */}
+      <div className="absolute top-0 bottom-0 left-0 w-[30%] bg-[#fafafa] border-r border-gray-200 z-0"></div>
+      <div className="absolute top-0 bottom-0 right-0 w-[70%] bg-white z-0"></div>
+
       {/* Skillcase Logo */}
-      <div className="absolute top-4 right-6 flex items-center space-x-2 z-10">
+      <div className="absolute top-4 right-6 flex items-center space-x-2 z-20">
         <img
           src="/mainlogo.png"
           alt="Skillcase"
@@ -298,8 +268,8 @@ function EuropassResumeTemplate({ data }) {
         />
       </div>
 
-      {/* Left Sidebar */}
-      <div className="w-[30%] bg-[#fafafa] p-8 border-r border-gray-200">
+      {/* --- Left Sidebar (Content Only) --- */}
+      <div className="w-[30%] p-8 flex flex-col z-10 relative">
         <div className="text-center mb-8">
           {personalInfo?.profilePhoto && (
             <div className="relative mb-6 mx-auto w-32 h-32">
@@ -307,6 +277,9 @@ function EuropassResumeTemplate({ data }) {
                 src={personalInfo.profilePhoto}
                 alt="Profile"
                 className="w-32 h-32 rounded-full border-2 border-gray-300 mx-auto object-cover"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                }}
               />
             </div>
           )}
@@ -334,12 +307,12 @@ function EuropassResumeTemplate({ data }) {
         </div>
       </div>
 
-      {/* Right Content */}
-      <div className="w-[70%] p-8 pt-16">
+      {/* --- Right Content (Content Only) --- */}
+      <div className="w-[70%] p-8 pt-16 flex flex-col z-10 relative">
         <div className="space-y-2">
           {/* About Me */}
           {personalInfo?.aboutMe && (
-            <div className="mb-6">
+            <div className="mb-6 page-break-avoid">
               <h2 className="text-base font-normal text-black uppercase tracking-wider mb-1">
                 ABOUT ME:
               </h2>
@@ -427,7 +400,10 @@ function EuropassResumeTemplate({ data }) {
 
           {/* Languages */}
           {(motherTongue || languages?.length > 0) && (
-            <ResumeSection title="LANGUAGE SKILLS" className="ml-12">
+            <ResumeSection
+              title="LANGUAGE SKILLS"
+              className="ml-12 page-break-avoid"
+            >
               <div className="text-black text-xs tracking-wide mt-0">
                 {motherTongue && (
                   <div className="mb-2 ml-2">
@@ -439,41 +415,79 @@ function EuropassResumeTemplate({ data }) {
                     </span>
                   </div>
                 )}
-                {languages?.map((lang) => (
-                  <div key={lang.id} className="mb-4 ml-2">
-                    <div>
-                      <span className="font-bold uppercase">
-                        OTHER LANGUAGE(S):{" "}
-                      </span>
-                      <span className="font-medium uppercase">
-                        {lang.language}
-                      </span>
-                    </div>
-                    <div className="mt-2 space-y-1">
-                      <div className="flex justify-between w-24">
-                        <span className="font-semibold">Reading</span>
-                        <span>{lang.reading}</span>
-                      </div>
-                      <div className="flex justify-between w-24">
-                        <span className="font-semibold">Speaking</span>
-                        <span>{lang.speaking}</span>
-                      </div>
-                      <div className="flex justify-between w-24">
-                        <span className="font-semibold">Writing</span>
-                        <span>{lang.writing}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+
+                {(() => {
+                  const germanLanguages =
+                    languages?.filter((lang) =>
+                      ["german", "deutsch"].includes(
+                        lang.language?.toLowerCase()
+                      )
+                    ) || [];
+
+                  const otherLanguages =
+                    languages?.filter(
+                      (lang) =>
+                        !["german", "deutsch"].includes(
+                          lang.language?.toLowerCase()
+                        )
+                    ) || [];
+
+                  return (
+                    <>
+                      {germanLanguages.map((lang) => (
+                        <div
+                          key={lang.id}
+                          className="mb-4 ml-2 page-break-avoid"
+                        >
+                          <div>
+                            <span className="font-bold uppercase">
+                              OTHER LANGUAGE(S):{" "}
+                            </span>
+                            <span className="font-medium uppercase">
+                              {lang.language}
+                            </span>
+                          </div>
+                          <div className="mt-2 space-y-1">
+                            <div className="flex justify-between w-24">
+                              <span className="font-semibold">Reading</span>
+                              <span>{lang.reading}</span>
+                            </div>
+                            <div className="flex justify-between w-24">
+                              <span className="font-semibold">Speaking</span>
+                              <span>{lang.speaking}</span>
+                            </div>
+                            <div className="flex justify-between w-24">
+                              <span className="font-semibold">Writing</span>
+                              <span>{lang.writing}</span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+
+                      {otherLanguages.length > 0 && (
+                        <div className="mb-2 ml-2">
+                          <span className="font-bold uppercase">
+                            OTHER LANGUAGE(S):{" "}
+                          </span>
+                          <span className="font-medium uppercase">
+                            {otherLanguages
+                              .map((lang) => lang.language)
+                              .join(", ")}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </ResumeSection>
           )}
 
-          {/* Digital Skills */}
+          {/* Skills */}
           {(medicalSkills?.length > 0 ||
             skills?.technical?.length > 0 ||
             skills?.soft?.length > 0) && (
-            <ResumeSection title="DIGITAL SKILLS" className="ml-12">
+            <ResumeSection title="SKILLS" className="ml-12 page-break-avoid">
               <div className="text-xs text-black mt-0 ml-2 flex flex-wrap gap-x-6 gap-y-1">
                 {medicalSkills?.map((skill, index) => (
                   <span key={`med-${index}`} className="font-medium">
@@ -496,7 +510,10 @@ function EuropassResumeTemplate({ data }) {
 
           {/* Hobbies */}
           {hobbies && (
-            <ResumeSection title="HOBBIES AND INTERESTS" className="ml-12">
+            <ResumeSection
+              title="HOBBIES AND INTERESTS"
+              className="ml-12 page-break-avoid"
+            >
               <div className="text-xs text-black mt-0 ml-2 flex flex-wrap gap-x-6 gap-y-1">
                 {Array.isArray(hobbies)
                   ? hobbies.map((hobby, index) => (

@@ -1,6 +1,5 @@
 const { pool } = require("../util/db");
-const { extractTextFromPdf } = require("../services/pdfParserService");
-const { extractResumeData } = require("../services/resumeExtractorService");
+const { extractResumeFromPDF } = require("../services/geminiPdfExtractor");
 
 const extractResume = async (req, res) => {
   try {
@@ -9,8 +8,9 @@ const extractResume = async (req, res) => {
     }
 
     const pdfBuffer = req.file.buffer;
-    const resumeText = await extractTextFromPdf(pdfBuffer);
-    const resumeData = await extractResumeData(resumeText);
+    
+    // Extract resume data directly from PDF using Gemini's native PDF processing
+    const resumeData = await extractResumeFromPDF(pdfBuffer);
 
     return res.status(200).json({
       success: true,

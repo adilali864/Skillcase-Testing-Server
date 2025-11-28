@@ -1,29 +1,68 @@
 const { getGeminiClient, geminiConfig } = require("../config/gemini");
 
-const extractResumeData = async (resumeText) => {
+const extractResumeFromPDF = async (pdfBuffer) => {
   const genAI = getGeminiClient();
   if (!genAI) {
     throw new Error("Gemini not initialized");
   }
 
   const prompt = `
-You are a resume parsing expert specializing in reconstructing broken text layouts.
-The text provided comes from a PDF parser that often reads columns linearly, causing dates and locations to become separated from their job titles (e.g., all titles listed first, then all dates listed later).
+You are an expert resume parser with visual understanding of PDF layouts.
+Analyze this resume PDF and extract ALL information into the specified JSON format.
 
-### CRITICAL PROCESSING INSTRUCTIONS:
-1. **Layout Repair (Internal Step):** Before extracting JSON, analyze the text stream. If you see a cluster of Job Titles followed later by a cluster of Dates, map them sequentially. (e.g., The 1st date in the cluster likely belongs to the 1st title in the previous cluster).
-2. **Company Grouping:** Identify if multiple roles belong to the same company. If a company name (like "Simplilearn") is listed once, but followed by multiple roles, apply that company to all relevant roles.
-3. **Implicit Current Jobs:** If a date range includes "Present" or "Current", set "currentJob": true.
+### CRITICAL RULES:
+1. **VISUAL LAYOUT AWARENESS**: You can see the PDF layout - use column positions, tables, and formatting to correctly associate data.
+2. **ONE PERSON ONLY**: This resume belongs to ONE person. Keep all data together.
+3. **EXACT MAPPING**: Each job must have its own position, company, dates, and responsibilities.
+4. **NO HALLUCINATION**: Only extract information that EXISTS in the PDF.
+5. **CHRONOLOGICAL ORDER**: List experiences and education from most recent to oldest.
 
-### DATA EXTRACTION RULES:
-1. **Personal Info:** Extract Name, Phone, Email, Address, LinkedIn/Links.
-2. **Education:** Extract Degree, Institution, Year (Start/End), Location.
-3. **Experience:** Extract Role, Company, Start Date (MM/YYYY), End Date (MM/YYYY), Location, Responsibilities.
-   - *Correction Rule:* If "Nelson Sports" appears between Simplilearn titles and Simplilearn dates in the text stream, ignore the text order and use logical date proximity to assign the correct company.
-4. **Skills:** separate into Technical vs Soft.
-5. **Languages:** Standardize to CEFR (A1-C2) if possible, otherwise use descriptive levels.
+### EXTRACTION GUIDELINES:
 
-### JSON OUTPUT FORMAT (Strictly adhere to this):
+**Personal Information:**
+- firstName, lastName: Split full name
+- phone, email: Extract contact details
+- linkedin: Extract LinkedIn URL (clean format)
+- address: City, Country or full address
+- nationality: If mentioned
+- aboutMe: Create 2-3 sentence summary from objective/summary section
+
+**Education (reverse chronological):**
+- For EACH degree:
+  * startYear: "2018" (year only)
+  * endYear: "2022" or "Present"
+  * degree: Full degree name
+  * institution: University/College name
+  * location: City, Country
+- Generate IDs: "edu-1", "edu-2", etc.
+
+**Work Experience (reverse chronological):**
+- For EACH job position:
+  * position: Job title
+  * company: Company name
+  * startDate: "MM/YYYY" format (e.g., "06/2020")
+  * endDate: "MM/YYYY" or "Present"
+  * location: City, Country
+  * responsibilities: Array of strings (each bullet point as separate string)
+  * currentJob: true if endDate is "Present", false otherwise
+- ⚠️ IMPORTANT: Keep each job separate! Don't merge responsibilities from different positions.
+- Generate IDs: "exp-1", "exp-2", etc.
+
+**Languages:**
+- motherTongue: Native language
+- languages: Array of other languages with proficiency
+  * Use CEFR levels: A1, A2, B1, B2, C1, C2
+  * If not specified, use "B2" as default
+- Generate IDs: "lang-1", "lang-2", etc.
+
+**Skills:**
+- technical: ["Python", "React", "Docker"] - programming, tools, software
+- soft: ["Leadership", "Communication"] - interpersonal skills
+
+**Hobbies:**
+- Comma-separated string: "Reading, Photography, Hiking"
+
+### JSON OUTPUT FORMAT:
 {
   "personalInfo": {
     "firstName": "",
@@ -54,7 +93,7 @@ The text provided comes from a PDF parser that often reads columns linearly, cau
       "location": "",
       "position": "",
       "company": "",
-      "responsibilities": [ "List strings", "do not put bullet points here" ],
+      "responsibilities": [],
       "currentJob": false
     }
   ],
@@ -75,19 +114,38 @@ The text provided comes from a PDF parser that often reads columns linearly, cau
   "hobbies": ""
 }
 
-### RESUME CONTENT:
-${resumeText}
-
-Response (JSON ONLY):
+Return ONLY the JSON object (no markdown, no explanations).
 `;
 
   try {
+    // Convert PDF buffer to base64
+    const base64PDF = pdfBuffer.toString("base64");
+
+    // Send PDF directly to Gemini
     const result = await genAI.models.generateContent({
       model: geminiConfig.model,
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: geminiConfig.generationConfig,
+      contents: [
+        {
+          role: "user",
+          parts: [
+            { text: prompt },
+            {
+              inlineData: {
+                mimeType: "application/pdf",
+                data: base64PDF,
+              },
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        ...geminiConfig.generationConfig,
+        temperature: 0.1, // Low temperature for consistent extraction
+        maxOutputTokens: 4000,
+      },
     });
 
+    // Extract response
     let extractedText;
     if (result.candidates && result.candidates[0]) {
       extractedText = result.candidates[0].content.parts[0].text;
@@ -96,35 +154,39 @@ Response (JSON ONLY):
       throw new Error("Unable to extract text from Gemini response");
     }
 
+    // Parse JSON response
     let resumeData = parseGeminiResponse(extractedText);
     resumeData = validateResumeData(resumeData);
 
     return resumeData;
   } catch (error) {
-    console.log("Error in extracting resume data:", error.message);
-    throw new Error("Failed to extract data from resume: " + error.message);
+    console.log("Error in extracting resume from PDF:", error.message);
+    throw new Error("Failed to extract data from resume PDF: " + error.message);
   }
 };
 
+// Helper function to parse Gemini's JSON response
 const parseGeminiResponse = (text) => {
   try {
     let jsonText = text.trim();
 
-    //removes markdown blocks if any
+    // Remove markdown code blocks if any
     jsonText = jsonText.replace(/```json\s*/g, "").replace(/```\s*$/g, "");
 
-    //matches the JSON object in response
+    // Extract JSON object
     const jsonMatch = jsonText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       jsonText = jsonMatch[0];
     }
+
     return JSON.parse(jsonText);
   } catch (error) {
-    console.log("Error in parsing gemini response: ", error.message);
-    throw new Error("Failed to parse response: ", error.message);
+    console.log("Error parsing Gemini response:", error.message);
+    throw new Error("Failed to parse AI response: " + error.message);
   }
 };
 
+// Validate and normalize resume data
 const validateResumeData = (data) => {
   return {
     personalInfo: {
@@ -182,4 +244,4 @@ const validateResumeData = (data) => {
   };
 };
 
-module.exports = { extractResumeData };
+module.exports = { extractResumeFromPDF };

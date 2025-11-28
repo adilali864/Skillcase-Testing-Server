@@ -1,56 +1,32 @@
-const axios = require("axios");
+const { generateResumePDF } = require("../services/resumePdfService");
 exports.generateResumePDF = async (req, res) => {
   try {
-    const { html, fileName } = req.body;
-    // Validation
-    if (!html || typeof html !== "string") {
-      return res.status(400).json({ error: "Invalid HTML content" });
+    const { resumeData } = req.body;
+    // Validate data
+    if (!resumeData || !resumeData.personalInfo) {
+      return res.status(400).json({
+        error: "Invalid resume data. personalInfo is required.",
+      });
     }
-    if (html.length > 5 * 1024 * 1024) {
-      return res.status(400).json({ error: "HTML content too large" });
-    }
-    const sanitizedFileName = (fileName || "resume")
-      .replace(/[^a-zA-Z0-9_-]/g, "_")
-      .substring(0, 100);
-    // Call HTML2PDF.app API
-    const response = await axios.post(
-      "https://api.html2pdf.app/v1/generate",
-      {
-        html: html,
-        apiKey: process.env.HTML2PDF_API_KEY,
-        options: {
-          format: "A4",
-          printBackground: true,
-          margin: {
-            top: 0,
-            right: 0,
-            bottom: 0,
-            left: 0,
-          },
-        },
-      },
-      {
-        responseType: "arraybuffer",
-        timeout: 30000, // 30 seconds
-      }
-    );
-    // Send PDF as download
+    console.log("Generating PDF for:", resumeData.personalInfo.firstName);
+    // Generate PDF using PDFKit
+    const pdfBuffer = await generateResumePDF(resumeData);
+    // Set response headers
+    const fileName = `${resumeData.personalInfo.firstName || "Resume"}_${
+      resumeData.personalInfo.lastName || ""
+    }_Resume.pdf`.replace(/\s+/g, "_");
+
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename="${sanitizedFileName}.pdf"`
-    );
-    res.send(response.data);
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader("Content-Length", pdfBuffer.length);
+    // Send PDF
+    res.send(pdfBuffer);
+    console.log("PDF generated successfully:", fileName);
   } catch (error) {
-    console.error("PDF Generation Error:", error.message);
-    
-    if (error.response?.status === 401) {
-      return res.status(500).json({ error: "Invalid API key" });
-    }
-    if (error.response?.status === 429) {
-      return res.status(429).json({ error: "Rate limit exceeded" });
-    }
-    
-    res.status(500).json({ error: "Failed to generate PDF" });
+    console.error("PDF Generation Error:", error);
+    res.status(500).json({
+      error: "Failed to generate PDF",
+      message: error.message,
+    });
   }
 };
