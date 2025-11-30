@@ -12,6 +12,8 @@ const ttsRouter = require("./routes/ttsRouter");
 const resumeRouter = require("./routes/resumeRouter");
 const pdfRoutes = require("./routes/pdfRouter");
 const uploadRouter = require("./routes/uploadRouter");
+const conversationRouter = require("./routes/conversationRouter");
+const conversationAdminRouter = require("./routes/conversationAdminRouter");
 
 const {
   authMiddleware,
@@ -64,6 +66,14 @@ app.use("/api/tts", authMiddleware, ttsRouter);
 app.use("/api/resume", authMiddleware, resumeRouter);
 app.use("/api/pdf", pdfRoutes);
 app.use("/api/upload", uploadRouter);
+
+app.use("/api/conversation", authMiddleware, conversationRouter);
+app.use(
+  "/api/admin/conversation",
+  authMiddleware,
+  authorizeRole("admin"),
+  conversationAdminRouter
+);
 
 app.listen(3000, () => {
   console.log("server is running at http://localhost:3000");

@@ -6,6 +6,7 @@ import {
   ArrowRight,
   Mic,
   BookImage,
+  MessageCircle,
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
@@ -190,7 +191,7 @@ export default function LandingPage() {
                   </div>
                 </Link>
 
-                <Link
+                {/* <Link
                   to="/resume"
                   className="bg-[#4CAF50] rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 group"
                 >
@@ -201,6 +202,25 @@ export default function LandingPage() {
                     </div>
                     <div className="text-xs sm:text-sm opacity-90">
                       Create & Edit
+                    </div>
+                  </div>
+                </Link> */}
+
+                <Link
+                  to={
+                    user?.user_prof_level
+                      ? `/conversation/${user?.user_prof_level}`
+                      : "conversation/A1"
+                  }
+                  className="bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 group"
+                >
+                  <MessageCircle className="w-12 h-12 sm:w-16 sm:h-16 text-white mb-3 sm:mb-4 group-hover:scale-110 transition-transform" />
+                  <div className="text-center text-white">
+                    <div className="text-lg sm:text-xl font-bold mb-1">
+                      Conversations
+                    </div>
+                    <div className="text-xs sm:text-sm opacity-90">
+                      Listen & Learn
                     </div>
                   </div>
                 </Link>

@@ -1,0 +1,45 @@
+{
+  "title": "Hallo",
+  "topic": "",
+  "proficiency_level": "A1",
+  "audio_file": "NWn_A1_KB_Audio_1-001.mp3",
+  "audio_duration": 15.5,
+  "sentences": [
+    {
+      "order": 1,
+      "text": "Hallo Nina.",
+      "start_time": 3,
+      "end_time": 4
+    },
+    {
+      "order": 2,
+      "text": "Hallo Niklas.",
+      "start_time": 5,
+      "end_time": 6
+    },
+    {
+      "order": 3,
+      "text": "Wie geht's?",
+      "start_time": 6,
+      "end_time": 6.7
+    },
+    {
+      "order": 4,
+      "text": "Danke, sehr gut.",
+      "start_time": 7,
+      "end_time": 9
+    },
+    {
+      "order": 5,
+      "text": "Und dir?",
+      "start_time": 9,
+      "end_time": 10
+    },
+    {
+      "order": 6,
+      "text": "Ganz gut, danke.",
+      "start_time": 10.5,
+      "end_time": 12
+    }
+  ]
+}

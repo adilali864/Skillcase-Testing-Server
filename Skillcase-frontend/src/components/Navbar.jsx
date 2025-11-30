@@ -79,6 +79,12 @@ export default function Navbar() {
             >
               Resume Builder
             </Link>
+            <Link
+              to="/conversation/A1"
+              className="text-slate-700 hover:text-[#1976D2] transition font-medium"
+            >
+              Conversations
+            </Link>
 
             {isAuthenticated ? (
               <>
@@ -182,9 +188,15 @@ export default function Navbar() {
             </Link>
             <Link
               to="/resume"
-              className="text-slate-700 hover:text-[#1976D2] transition font-medium"
+              className="block text-slate-700 hover:text-[#1976D2] transition font-medium"
             >
               Resume Builder
+            </Link>
+            <Link
+              to="/conversation/A1"
+              className="block text-slate-700 hover:text-[#1976D2] transition font-medium"
+            >
+              Conversations
             </Link>
 
             {isAuthenticated ? (

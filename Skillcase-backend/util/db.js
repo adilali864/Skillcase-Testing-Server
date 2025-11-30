@@ -46,6 +46,9 @@ async function initDb(pool) {
     await pool.query(queries.createAgreement);
     await pool.query(queries.createStory);
     await pool.query(queries.createResume);
+    await pool.query(queries.createConversation);
+    await pool.query(queries.createConversationSentence);
+    await pool.query(queries.createUserConversationProgress);
 
     console.log("Tables created or already exist!");
   } catch (err) {
