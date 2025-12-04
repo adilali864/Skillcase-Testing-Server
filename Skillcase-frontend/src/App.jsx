@@ -36,6 +36,7 @@ import ManualResumeBuilder from "./pages/ManualResumeBuilder";
 import MyResumes from "./pages/MyResumes";
 import ConversationSelect from "./pages/ConversationSelect";
 import ConversationPlayer from "./pages/ConversationPlayer";
+import NursingGermanyLanding from "./pages/NursingGermanyLanding";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -95,6 +96,7 @@ export default function App() {
           path="/conversation/:prof_level/:conversation_id"
           element={<ConversationPlayer />}
         />
+        <Route path="/nursing-germany" element={<NursingGermanyLanding />} />
       </Routes>
 
       <Footer />
