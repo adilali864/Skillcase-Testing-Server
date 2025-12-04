@@ -319,7 +319,6 @@ export default function NursingGermanyLanding() {
       {showThankYou && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full p-12 text-center">
-            <div className="text-6xl mb-6">✅</div>
             <h2 className="text-3xl font-bold text-[#1e3a8a] mb-4">
               Thank You!
             </h2>
