@@ -98,8 +98,14 @@ export default function App() {
         />
         <Route path="/nursing-germany" element={<NursingGermanyLanding />} />
       </Routes>
-
-      <Footer />
+      <ConditionalFooter />
     </BrowserRouter>
   );
+}
+function ConditionalFooter() {
+  const location = useLocation();
+  const hideFooter = location.pathname === "/nursing-germany";
+
+  if (hideFooter) return null;
+  return <Footer />;
 }

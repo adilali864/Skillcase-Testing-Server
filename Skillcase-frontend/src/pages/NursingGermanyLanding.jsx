@@ -1,180 +1,335 @@
-import { useEffect } from "react";
+import { useState } from "react";
 import {
-  Globe,
+  X,
   GraduationCap,
   Briefcase,
+  Plane,
+  HandHeart,
+  TrendingUp,
+  Users,
   Heart,
-  ArrowRight,
-  CheckCircle,
+  MapPin,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+
 export default function NursingGermanyLanding() {
-  const navigate = useNavigate();
-  const eligibility = [
-    "B.Sc / GNM Graduate",
-    "German B1 Level (Pass)",
-    "Freshers Welcome",
+  const [showModal, setShowModal] = useState(false);
+  const [showThankYou, setShowThankYou] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setShowModal(false);
+    setShowThankYou(true);
+
+    setTimeout(() => {
+      window.location.href = "https://skillcase.in";
+    }, 3000);
+  };
+
+  const germanyBenefits = [
+    {
+      title: "10x Your Earning Potential",
+      description:
+        "Earn Up to 10 Times More Than Your Current Salary as a Healthcare Professional in Germany",
+      icon: <TrendingUp className="w-8 h-8 text-green-600" />,
+      bgColor: "bg-green-50",
+    },
+    {
+      title: "Settle Abroad with Family",
+      description:
+        "Germany's family reunification policy allows you to bring your spouse and minor children with you",
+      icon: <Users className="w-8 h-8 text-blue-600" />,
+      bgColor: "bg-blue-50",
+    },
+    {
+      title: "World Class Healthcare",
+      description:
+        "Germany provides free or heavily subsidized healthcare and education for all residents",
+      icon: <Heart className="w-8 h-8 text-red-600" />,
+      bgColor: "bg-red-50",
+    },
+    {
+      title: "Pathway to Permanent Residency",
+      description:
+        "Apply for permanent residency after 3 years of living and working in Germany",
+      icon: <MapPin className="w-8 h-8 text-purple-600" />,
+      bgColor: "bg-purple-50",
+    },
   ];
-  const features = [
+
+  const benefits = [
     {
-      icon: <Briefcase className="w-12 h-12 sm:w-16 sm:h-16" />,
-      title: "High Salary",
-      description: "€2,500 - €3,500/month",
-      color: "bg-[#1976D2]",
+      title: "Language Training",
+      description:
+        "Achieve German B1 level with our expert guidance and structured training program",
+      icon: <GraduationCap className="w-12 h-12 text-[#1976D2]" />,
+      bgColor: "bg-blue-50",
     },
     {
-      icon: <Globe className="w-12 h-12 sm:w-16 sm:h-16" />,
-      title: "Work in Europe",
-      description: "Career in Germany",
-      color: "bg-gradient-to-br from-blue-600 to-blue-800",
+      title: "Job Assistance",
+      description:
+        "Get matched with top hospitals in Germany and secure your dream nursing job",
+      icon: <Briefcase className="w-12 h-12 text-[#f59e0b]" />,
+      bgColor: "bg-amber-50",
     },
     {
-      icon: <GraduationCap className="w-12 h-12 sm:w-16 sm:h-16" />,
-      title: "German Training",
-      description: "Achieve B1 Level",
-      color: "bg-[#81D4FA]",
+      title: "Relocation Support",
+      description:
+        "Complete assistance for your move to Germany, from visa to settling in",
+      icon: <Plane className="w-12 h-12 text-[#10b981]" />,
+      bgColor: "bg-emerald-50",
     },
     {
-      icon: <Heart className="w-12 h-12 sm:w-16 sm:h-16" />,
-      title: "Full Support",
-      description: "Visa & Placement",
-      color: "bg-gradient-to-br from-purple-500 to-purple-700",
+      title: "Complete Support",
+      description:
+        "End-to-end guidance throughout your entire journey to Germany",
+      icon: <HandHeart className="w-12 h-12 text-[#8b5cf6]" />,
+      bgColor: "bg-purple-50",
     },
   ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white w-screen">
-      <section id="home" className="w-full px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
-        <div className="container mx-auto grid lg:grid-cols-2 gap-8 xl:gap-12 items-center">
-          <div className="space-y-6">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight">
-              Work as a <span className="text-[#1976D2]">Nurse in Germany</span>
-            </h1>
-            <p className="text-lg text-slate-600 leading-relaxed">
-              Step into a nursing career abroad with SkillCase. We help you
-              achieve German B1 level and secure nursing jobs in Germany.
-            </p>
-            <div className="bg-white rounded-2xl p-6 shadow-lg border-2 border-[#1976D2]">
-              <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                <span className="text-[#1976D2]">✓</span> Eligibility:
-              </h3>
-              <ul className="space-y-3">
-                {eligibility.map((item, index) => (
-                  <li key={index} className="flex items-center gap-3">
-                    <CheckCircle className="w-5 h-5 text-[#1976D2] flex-shrink-0" />
-                    <span className="text-slate-700">{item}</span>
-                  </li>
-                ))}
-              </ul>
+    <div className="min-h-screen bg-white">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-b from-blue-50 to-white py-16">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left Content */}
+            <div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-[#1e3a8a] leading-tight mb-6">
+                Work as a Nurse in Germany
+              </h1>
+
+              <p className="text-lg text-gray-600 mb-8">
+                Discover exciting job openings abroad and get the expert help
+                you need to navigate the entire process, from application to
+                relocation.
+              </p>
             </div>
-            <button
-              onClick={() => navigate("/Login")}
-              className="bg-[#1976D2] text-white px-8 py-4 rounded-lg hover:bg-blue-700 transition items-center space-x-2 text-lg font-semibold group inline-flex shadow-lg"
-            >
-              <span>Apply Now - Start Your Journey</span>
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
-            </button>
-            <p className="text-sm text-slate-500">
-              Free consultation • No hidden charges
-            </p>
-          </div>
-          <div className="relative w-full">
-            <div className="grid grid-cols-2 gap-4 w-full">
-              {features.map((feature, index) => (
-                <div
-                  key={index}
-                  className={`${feature.color} rounded-2xl p-6 sm:p-8 flex flex-col items-center justify-center shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 group`}
-                >
-                  <div className="text-white mb-3 sm:mb-4 group-hover:scale-110 transition-transform">
-                    {feature.icon}
-                  </div>
-                  <div className="text-center text-white">
-                    <div className="text-lg sm:text-xl font-bold mb-1">
-                      {feature.title}
-                    </div>
-                    <div className="text-xs sm:text-sm opacity-90">
-                      {feature.description}
-                    </div>
-                  </div>
-                </div>
-              ))}
+
+            {/* Right - Nurse Image */}
+            <div className="relative">
+              <img
+                src="https://skillcase.in/static/img/banner/1.PNG"
+                alt="Nursing in Germany"
+                className="w-full h-auto rounded-2xl shadow-lg"
+              />
             </div>
           </div>
         </div>
       </section>
-      <section className="w-full px-4 sm:px-6 lg:px-8 py-12 bg-white">
-        <div className="container mx-auto max-w-4xl">
-          <h2 className="text-3xl md:text-4xl font-bold text-center text-slate-900 mb-12">
-            Your Journey to Germany
+
+      {/* Video Section */}
+      <section className="bg-white py-12">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <div className="bg-white rounded-2xl shadow-xl p-4 md:p-8 border-4 border-[#1976D2]">
+            <div className="aspect-video bg-slate-900 rounded-lg flex items-center justify-center">
+              <div className="text-center text-white">
+                <p className="text-xl">Sales Pitch Video</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Subheading */}
+          <h2 className="text-2xl md:text-3xl font-semibold text-center text-[#3257bf] mt-8">
+            B.Sc / GNM <br /> Freshers Welcome
           </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            {[
-              {
-                step: "1",
-                title: "Register & Assessment",
-                desc: "Sign up and we'll evaluate your profile",
-                color: "bg-[#1976D2]",
-              },
-              {
-                step: "2",
-                title: "German Language Training",
-                desc: "Achieve B1 level with our expert guidance",
-                color: "bg-blue-600",
-              },
-              {
-                step: "3",
-                title: "Job Placement",
-                desc: "Get matched with top hospitals in Germany",
-                color: "bg-[#81D4FA]",
-              },
-              {
-                step: "4",
-                title: "Visa & Relocation",
-                desc: "Complete support for your move to Germany",
-                color: "bg-purple-500",
-              },
-            ].map((item, index) => (
+        </div>
+      </section>
+
+      {/* Germany Benefits Section */}
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1e3a8a] mb-4">
+            Why Choose Germany?
+          </h2>
+          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+            Transform your nursing career with unparalleled opportunities in
+            Germany
+          </p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {germanyBenefits.map((benefit, index) => (
               <div
                 key={index}
-                className="bg-slate-50 rounded-2xl p-6 hover:shadow-lg transition-all"
+                className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:-translate-y-1 duration-300 text-center"
               >
-                <div className="flex gap-4 items-start">
+                <div className="flex justify-center mb-4">
                   <div
-                    className={`flex-shrink-0 w-12 h-12 ${item.color} text-white rounded-full flex items-center justify-center font-bold text-xl shadow-lg`}
+                    className={`${benefit.bgColor} w-16 h-16 rounded-xl flex items-center justify-center`}
                   >
-                    {item.step}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-slate-900 mb-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-slate-600">{item.desc}</p>
+                    {benefit.icon}
                   </div>
                 </div>
+                <h3 className="text-xl font-bold text-[#1e3a8a] mb-3">
+                  {benefit.title}
+                </h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {benefit.description}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
-      <section className="w-full px-4 sm:px-6 lg:px-8 py-16">
-        <div className="container mx-auto max-w-4xl text-center bg-gradient-to-r from-[#1976D2] to-blue-700 rounded-2xl p-12 shadow-2xl">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Start Your Nursing Career in Germany?
+
+      {/* Benefits Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 max-w-6xl">
+          <h2 className="text-3xl md:text-4xl font-bold text-center text-[#1e3a8a] mb-12">
+            We Provide Everything You Need
           </h2>
-          <p className="text-xl text-white/90 mb-8">
-            Join hundreds of nurses already working in Germany
-          </p>
-          <button
-            onClick={() => navigate("/Login")}
-            className="bg-white text-[#1976D2] hover:bg-slate-100 text-lg font-bold px-10 py-4 rounded-lg shadow-xl transition-all transform hover:scale-105 inline-flex items-center space-x-2"
-          >
-            <span>Apply Now - Limited Seats</span>
-            <ArrowRight className="w-5 h-5" />
-          </button>
+          <div className="grid md:grid-cols-2 gap-8">
+            {benefits.map((benefit, index) => (
+              <div
+                key={index}
+                className="bg-white rounded-2xl p-8 shadow-lg border border-gray-100 hover:shadow-xl transition-all hover:-translate-y-1 duration-300"
+              >
+                <div
+                  className={`${benefit.bgColor} w-16 h-16 rounded-xl flex items-center justify-center mb-4`}
+                >
+                  {benefit.icon}
+                </div>
+                <h3 className="text-2xl font-bold text-[#1e3a8a] mb-3">
+                  {benefit.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {benefit.description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
-      <footer className="w-full px-4 py-8 text-center text-slate-600">
-        <p>© 2024 SkillCase. All rights reserved.</p>
+
+      {/* Footer with Video */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-8">
+            Watch Our Introduction
+          </h2>
+          <div className="max-w-4xl mx-auto">
+            <div className="aspect-video rounded-lg overflow-hidden shadow-2xl">
+              <iframe
+                className="w-full h-full"
+                src="https://www.youtube.com/embed/X3upxWdcswg"
+                title="SkillCase Introduction"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+          <div className="text-center mt-8 text-gray-400">
+            <p>© 2024 SkillCase. All rights reserved.</p>
+          </div>
+        </div>
       </footer>
+
+      {/* Sticky Get Started Button */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => setShowModal(true)}
+          className="bg-[#f59e0b] text-white px-6 py-3 rounded-full font-semibold text-base hover:bg-amber-600 transition-all shadow-lg hover:shadow-xl hover:scale-105"
+        >
+          Get Started
+        </button>
+      </div>
+
+      {/* Form Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-8 relative">
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-6 h-6" />
+            </button>
+
+            <h2 className="text-2xl font-bold text-[#1e3a8a] mb-6">
+              Start Your Journey
+            </h2>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976D2]"
+                  placeholder="Enter your full name"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email *
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976D2]"
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Phone Number *
+                </label>
+                <input
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1976D2]"
+                  placeholder="Enter your phone number"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-[#f59e0b] text-white py-3 rounded-lg font-bold hover:bg-amber-600 transition"
+              >
+                Submit
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Thank You Modal */}
+      {showThankYou && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-12 text-center">
+            <div className="text-6xl mb-6">✅</div>
+            <h2 className="text-3xl font-bold text-[#1e3a8a] mb-4">
+              Thank You!
+            </h2>
+            <p className="text-xl text-gray-600 mb-2">
+              Our team will reach out to you soon.
+            </p>
+            <p className="text-sm text-gray-500">Redirecting to SkillCase...</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
