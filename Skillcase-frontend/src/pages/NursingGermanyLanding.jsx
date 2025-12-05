@@ -4,7 +4,8 @@ import { X, GraduationCap, Briefcase, Plane, HandHeart } from "lucide-react";
 export default function NursingGermanyLanding() {
   const handleSubmit = async (e) => {
     e.preventDefault();
-    window.location.href = "https://www.skillcase.in";
+    window.location.href =
+      "https://in.bigin.online/org60041264558/forms/register-to-get-started";
   };
 
   const germanyBenefits = [
