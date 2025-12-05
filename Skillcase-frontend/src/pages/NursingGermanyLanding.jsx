@@ -81,7 +81,7 @@ export default function NursingGermanyLanding() {
     "https://www.youtube.com/embed/GK19xGf7YkM",
   ];
   return (
-    <>
+    <div style={{ fontFamily: "'Poppins', sans-serif" }}>
       <nav className="bg-white shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -92,14 +92,20 @@ export default function NursingGermanyLanding() {
                 className="w-30 sm:w-30 md:w-30 lg:w-40 h-auto pt-1"
               />
             </a>
+            <a
+              href="tel:+919972266767"
+              className="flex items-center gap-1 bg-white hover:bg-grey-100 text-slate-800 px-4 py-2 rounded-full text-sm font-medium transition-all border"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" />
+              </svg>
+              Call Us
+            </a>
           </div>
         </div>
       </nav>
 
-      <div
-        className="min-h-screen bg-white relative overflow-hidden"
-        style={{ fontFamily: "'Poppins', sans-serif" }}
-      >
+      <div className="min-h-screen bg-white relative overflow-hidden">
         <link
           href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
           rel="stylesheet"
@@ -123,7 +129,7 @@ export default function NursingGermanyLanding() {
                 <iframe
                   id="heroVideo"
                   className="w-full h-full rounded-lg"
-                  src={`https://www.youtube.com/embed/9YQcJpkH77w?autoplay=1&mute=${
+                  src={`https://www.youtube.com/embed/sGE7QdnxEj8?autoplay=1&mute=${
                     isMuted ? 1 : 0
                   }&enablejsapi=1`}
                   title="Introduction to Skillcase"
@@ -328,10 +334,10 @@ export default function NursingGermanyLanding() {
                 </button>
                 {!submitSuccess && (
                   <div className="px-6 pt-8 pb-2 text-center">
-                    <h2 className="text-2xl md:text-3xl font-semibold text-[#002856]">
+                    <h2 className="text-lg md:text-2xl font-semibold text-[#002856]">
                       Start Your Journey
                     </h2>
-                    <p className="text-gray-500 mt-2 text-sm">
+                    <p className="text-gray-500 mt-2 text-xs">
                       Register now for your dream career in Germany
                     </p>
                   </div>
@@ -382,6 +388,7 @@ export default function NursingGermanyLanding() {
                           value="Q29udGFjdHM="
                         />
                         <input type="hidden" name="returnURL" value="null" />
+                        <input type="hidden" name="Tag" value="Google Ads" />
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1.5">
                             Full Name <span className="text-red-500">*</span>
@@ -540,6 +547,6 @@ export default function NursingGermanyLanding() {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
