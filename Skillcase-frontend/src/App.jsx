@@ -58,7 +58,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Navbar />
+      <ConditionalNav />
 
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -108,4 +108,11 @@ function ConditionalFooter() {
 
   if (hideFooter) return null;
   return <Footer />;
+}
+function ConditionalNav() {
+  const location = useLocation();
+  const hideNav = location.pathname === "/nursing-germany";
+
+  if (hideNav) return null;
+  return <Navbar />;
 }
