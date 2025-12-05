@@ -11,6 +11,7 @@ export default function NursingGermanyLanding() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [visibleItems, setVisibleItems] = useState({});
+  const [isMuted, setIsMuted] = useState(true);
   const formRef = useRef(null);
   const benefitsRef = useRef([]);
   useEffect(() => {
@@ -70,14 +71,14 @@ export default function NursingGermanyLanding() {
   ];
   const eligibilityBadges = [
     "GNM/B.Sc Nursing",
-    "Age below 35 Years",
+    "Age 35 Years",
     "Training Available",
     "Freshers Welcome",
   ];
   const testimonialVideos = [
-    "https://www.youtube.com/embed/h0aua9IBmxE",
     "https://www.youtube.com/embed/2cj-V23xxII",
     "https://www.youtube.com/embed/h0aua9IBmxE",
+    "https://www.youtube.com/embed/GK19xGf7YkM",
   ];
   return (
     <>
@@ -106,8 +107,7 @@ export default function NursingGermanyLanding() {
         <section className="py-8 md:py-12 relative z-10">
           <div className="container mx-auto px-4 text-center">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold leading-tight text-[#002856]">
-              Land your Nursing
-              <br />
+              Land your Nursing <br className="md:hidden" />
               jobs in Germany
             </h1>
             <p className="mt-4 text-[#002856] text-base max-w-md mx-auto">
@@ -119,16 +119,34 @@ export default function NursingGermanyLanding() {
         <section className="py-4 md:py-8 relative z-10">
           <div className="container mx-auto px-4 max-w-lg">
             <div className="rounded-lg overflow-hidden shadow-lg border p-1">
-              <div className="aspect-video">
+              <div className="aspect-video relative">
                 <iframe
+                  id="heroVideo"
                   className="w-full h-full rounded-lg"
-                  src="https://www.youtube.com/embed/8Zf0KaDAihw"
+                  src={`https://www.youtube.com/embed/9YQcJpkH77w?autoplay=1&mute=${
+                    isMuted ? 1 : 0
+                  }&enablejsapi=1`}
                   title="Introduction to Skillcase"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                 ></iframe>
               </div>
+              {isMuted && (
+                <button
+                  onClick={() => setIsMuted(false)}
+                  className="absolute -top-4 right-4 md:right-100 bg-black/70 hover:bg-black/90 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center gap-2 transition-all"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                  </svg>
+                  Tap to unmute
+                </button>
+              )}
             </div>
             <div className="mt-6 grid grid-cols-2 gap-3">
               {eligibilityBadges.map((badge, index) => (
@@ -196,16 +214,16 @@ export default function NursingGermanyLanding() {
         <section className="py-12 bg-gray-50 relative z-10">
           <div className="container mx-auto px-4 max-w-5xl">
             <h2 className="text-2xl md:text-3xl font-semibold text-center text-[#002856] mb-8">
-              Student Testimonials
+              Students Progress in just 4 Weeks!
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {testimonialVideos.map((video, index) => (
                 <div
                   key={index}
-                  className="aspect-[9/16] rounded-xl overflow-hidden shadow-lg bg-gray-900"
+                  className="aspect-[9/16] rounded-xl overflow-hidden shadow-lg p-3 border"
                 >
                   <iframe
-                    className="w-full h-full"
+                    className="w-full h-full rounded-lg"
                     src={video}
                     title={`Student Testimonial ${index + 1}`}
                     frameBorder="0"
@@ -221,9 +239,9 @@ export default function NursingGermanyLanding() {
         <section className="py-12 relative z-10">
           <div className="container mx-auto px-4 max-w-sm">
             <h2 className="text-2xl md:text-3xl font-semibold text-center text-[#002856] mb-8">
-              Explore Skillcase Learning App
+              Learn Online Anytime with Skillcase App
             </h2>
-            <div className="aspect-[9/16] rounded-lg overflow-hidden shadow-lg border p-1">
+            <div className="aspect-[9/16] rounded-lg overflow-hidden shadow-lg border p-3">
               <iframe
                 className="w-full h-full rounded-lg"
                 src="https://www.youtube.com/embed/7P7-tWh0VKA?si=EFTxQELhBknG3qCx"
@@ -251,9 +269,14 @@ export default function NursingGermanyLanding() {
 
         <footer className="bg-[#153A71] text-white py-12 pb-24 relative z-10">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-semibold text-center mb-8">
-              Watch Our Introduction
-            </h2>
+            <div className="text-center mb-8">
+              <h2 className="text-2xl md:text-3xl font-semibold">
+                Guest Lecture with Anilat
+              </h2>
+              <p className="text-base font-normal text-gray-300 mt-2">
+                Story of an Indian Nurse in Germany
+              </p>
+            </div>
             <div className="max-w-3xl mx-auto">
               <div className="aspect-video rounded-xl overflow-hidden shadow-2xl">
                 <iframe
@@ -372,7 +395,7 @@ export default function NursingGermanyLanding() {
                             }
                             required
                             placeholder="Enter your full name"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#002856]/20 focus:border-[#002856] focus:bg-white outline-none transition-all text-gray-800 placeholder-gray-400"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#002856]/20 focus:border-[#002856] focus:bg-white outline-none transition-all text-gray-800 placeholder-gray-300 placeholder:text-xs"
                           />
                         </div>
                         <div>
@@ -391,7 +414,7 @@ export default function NursingGermanyLanding() {
                             }
                             required
                             placeholder="Enter your phone number"
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#002856]/20 focus:border-[#002856] focus:bg-white outline-none transition-all text-gray-800 placeholder-gray-400"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#002856]/20 focus:border-[#002856] focus:bg-white outline-none transition-all text-gray-800 placeholder-gray-300 placeholder:text-xs"
                           />
                         </div>
                         <div>
@@ -411,7 +434,7 @@ export default function NursingGermanyLanding() {
                               }
                               required
                               style={{ backgroundImage: "none" }}
-                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#002856]/20 focus:border-[#002856] focus:bg-white outline-none transition-all text-gray-800 appearance-none cursor-pointer"
+                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#002856]/20 focus:border-[#002856] focus:bg-white outline-none transition-all text-gray-800 appearance-none cursor-pointer text-xs"
                             >
                               <option value="">
                                 Select your qualification
@@ -457,7 +480,7 @@ export default function NursingGermanyLanding() {
                               }
                               required
                               style={{ backgroundImage: "none" }}
-                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#002856]/20 focus:border-[#002856] focus:bg-white outline-none transition-all text-gray-800 appearance-none cursor-pointer"
+                              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#002856]/20 focus:border-[#002856] focus:bg-white outline-none transition-all text-gray-800 appearance-none cursor-pointer text-xs"
                             >
                               <option value="">Select your experience</option>
                               <option value="Less than 1 year">
