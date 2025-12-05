@@ -178,10 +178,12 @@ export default function NursingGermanyLanding() {
                 </div>
               ))}
             </div>
-            <div className="mt-6 bg-[#74d5ff]/20 rounded-xl py-4 px-6 text-center">
-              <p className="text-lg md:text-xl font-semibold text-[#002856]">
-                Upto 40 Lakh Yearly Salary!
-              </p>
+            <div className="w-full  flex items-center justify-center">
+              <div className="mt-6 bg-[#74d5ff]/20 rounded-xl py-4 px-4 text-center w-[70%]">
+                <p className="text-sm md:text-xl font-semibold text-[#002856]">
+                  Upto 40 Lakh Yearly Salary!
+                </p>
+              </div>
             </div>
           </div>
         </section>
