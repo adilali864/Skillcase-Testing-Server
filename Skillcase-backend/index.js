@@ -33,6 +33,10 @@ const allowed_origins = [
   "https://learner.skillcase.in",
   "https://skillcase-terms-and-condition.vercel.app",
   "https://skillcase-testing-server.vercel.app",
+  
+  "capacitor://localhost",
+  "https://localhost",
+  "http://localhost",
 ];
 
 app.use(
