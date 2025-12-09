@@ -20,7 +20,7 @@ export const scheduleStreakReminder = async () => {
           allowWhileIdle: true,
         },
         smallIcon: "ic_launcher",
-        iconColor: "#00BCD4",
+        iconColor: "#143A72",
       },
     ],
   });

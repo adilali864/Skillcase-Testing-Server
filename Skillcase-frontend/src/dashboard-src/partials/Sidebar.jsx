@@ -721,6 +721,42 @@ function Sidebar({
                   );
                 }}
               </SidebarLinkGroup>
+
+              {/* Send Notification */}
+              <li
+                className={`pl-4 pr-3 py-2 rounded-lg mb-0.5 last:mb-0 bg-linear-to-r ${
+                  activePage === "send-notification" &&
+                  "from-blue-500/[0.12] to-blue-500/[0.04]"
+                }`}
+              >
+                <button
+                  onClick={() => setActivePage("send-notification")}
+                  className={`block text-gray-800 truncate transition duration-150 cursor-pointer ${
+                    activePage === "send-notification"
+                      ? ""
+                      : "hover:text-gray-900"
+                  }`}
+                >
+                  <div className="flex items-center">
+                    <svg
+                      className={`shrink-0 fill-current ${
+                        activePage === "send-notification"
+                          ? "text-blue-500"
+                          : "text-gray-400"
+                      }`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                    >
+                      <path d="M8 0a6 6 0 0 0-6 6c0 2.08 1.07 3.93 2.69 5L3 16l3.5-2.33c.49.21 1.02.33 1.5.33a6 6 0 1 0 0-12zm0 11a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm1-3H7V4h2v4z" />
+                    </svg>
+                    <span className="text-sm font-medium ml-4 lg:opacity-0 lg:sidebar-expanded:opacity-100 2xl:opacity-100 duration-200">
+                      Send Notification
+                    </span>
+                  </div>
+                </button>
+              </li>
             </ul>
           </div>
         </div>

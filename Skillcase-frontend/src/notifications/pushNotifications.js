@@ -23,17 +23,19 @@ export const initPushNotifications = async () => {
   // Show local notification when push received while app is open
   PushNotifications.addListener("pushNotificationReceived", (notification) => {
     console.log("Notification received in foreground: ", notification);
-    
+
     // Show as local notification so user sees it
     LocalNotifications.schedule({
-      notifications: [{
-        id: Date.now(),
-        title: notification.title || "SkillCase",
-        body: notification.body || "",
-        schedule: { at: new Date(Date.now() + 100) }, // Show immediately
-        smallIcon: "ic_launcher",
-        iconColor: "#00BCD4"
-      }]
+      notifications: [
+        {
+          id: Date.now(),
+          title: notification.title || "SkillCase",
+          body: notification.body || "",
+          schedule: { at: new Date(Date.now() + 100) }, // Show immediately
+          smallIcon: "ic_launcher",
+          iconColor: "#143A72",
+        },
+      ],
     });
   });
 

@@ -86,7 +86,9 @@ const LoginSignupPage = () => {
           <div className="flex gap-2 mb-8 bg-slate-100 rounded-xl p-1">
             <button
               onClick={() => {
-                Haptics.impact({ style: ImpactStyle.Light });
+                try {
+                  Haptics.impact({ style: ImpactStyle.Light });
+                } catch (error) {}
                 setIsLogin(true);
               }}
               className={`flex-1 py-3 rounded-lg font-semibold transition-all ${
@@ -99,7 +101,9 @@ const LoginSignupPage = () => {
             </button>
             <button
               onClick={() => {
-                Haptics.impact({ style: ImpactStyle.Light });
+                try {
+                  Haptics.impact({ style: ImpactStyle.Light });
+                } catch (error) {}
                 setIsLogin(false);
               }}
               className={`flex-1 py-3 rounded-lg font-semibold transition-all ${

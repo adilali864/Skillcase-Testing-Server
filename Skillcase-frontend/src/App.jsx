@@ -43,6 +43,9 @@ import FallbackPage from "./pages/FallbackPage";
 import AddNotifications from "./pages/AddNotifications";
 import { initPushNotifications } from "./notifications/pushNotifications";
 
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { Capacitor } from "@capacitor/core";
+
 export default function App() {
   const dispatch = useDispatch();
   const { token, user } = useSelector((state) => state.auth);
@@ -81,16 +84,24 @@ export default function App() {
     fetchUser();
   }, [token, user, dispatch]);
 
-  // Initialize push notifications and streak reminder when user is logged in
   useEffect(() => {
     if (token) {
       initPushNotifications();
-      // Import dynamically to avoid issues on web
-      import("./notifications/localNotifications").then(({ scheduleStreakReminder }) => {
-        scheduleStreakReminder();
-      });
+      import("./notifications/localNotifications").then(
+        ({ scheduleStreakReminder }) => {
+          scheduleStreakReminder();
+        }
+      );
     }
   }, [token]);
+
+  // useEffect(() => {
+  //   if (Capacitor.isNativePlatform()) {
+  //     StatusBar.setOverlaysWebView({ overlay: false });
+  //     StatusBar.setBackgroundColor({ color: "#143A72" });
+  //     StatusBar.setStyle({ style: Style.Light });
+  //   }
+  // }, []);
 
   return (
     <>
