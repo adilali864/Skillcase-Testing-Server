@@ -14,6 +14,9 @@ const FallbackPage = () => {
       // setTimeout(() => {
       //   window.location.href = "playstore link";
       // }, 2000);
+      setTimeout(() => {
+        window.location.href = "https://learner.skillcase.in";
+      }, 2000);
     } else {
       window.location.href = "https://learner.skillcase.in";
     }
