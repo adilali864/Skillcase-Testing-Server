@@ -21,6 +21,7 @@ const Pronounce = () => {
   const [flashcardSet, setFlashcardSet] = useState([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [Progress, setProgress] = useState(0);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   // Voice recorder states
   const [isRecording, setIsRecording] = useState(false);
@@ -28,9 +29,10 @@ const Pronounce = () => {
   const [uploadStatus, setUploadStatus] = useState("");
   const [recordingTime, setRecordingTime] = useState(0);
 
-  const mediaRecorderRef = useRef(null);
+  const audioContextRef = useRef(null);
   const mediaStreamRef = useRef(null);
-  const audioChunksRef = useRef([]);
+  const scriptNodeRef = useRef(null);
+  const audioDataRef = useRef([]);
   const timerRef = useRef(null);
 
   const [swipeDirection, setSwipeDirection] = useState(null);
@@ -47,37 +49,28 @@ const Pronounce = () => {
 
   const totalCards = flashcardSet.length;
 
-  // Voice Recording Functions - Using MediaRecorder API for Android WebView compatibility
+  // Voice Recording Functions
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      const audioContext = new AudioContext();
+      audioContextRef.current = audioContext;
+
+      const source = audioContext.createMediaStreamSource(stream);
       mediaStreamRef.current = stream;
-      
-      // Try webm first, fall back to other formats
-      let mimeType = 'audio/webm';
-      if (!MediaRecorder.isTypeSupported('audio/webm')) {
-        mimeType = 'audio/mp4';
-        if (!MediaRecorder.isTypeSupported('audio/mp4')) {
-          mimeType = ''; // Let browser choose
-        }
-      }
-      
-      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          audioChunksRef.current.push(e.data);
-        }
+      const scriptNode = audioContext.createScriptProcessor(4096, 1, 1);
+      scriptNodeRef.current = scriptNode;
+      audioDataRef.current = [];
+
+      scriptNode.onaudioprocess = (e) => {
+        const input = e.inputBuffer.getChannelData(0);
+        audioDataRef.current.push(new Float32Array(input));
       };
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
-        await sendToBackend(audioBlob);
-      };
-
-      mediaRecorder.start();
+      source.connect(scriptNode);
+      scriptNode.connect(audioContext.destination);
 
       setIsRecording(true);
       setRecordingTime(0);
@@ -87,7 +80,7 @@ const Pronounce = () => {
       timerRef.current = setInterval(() => {
         setRecordingTime((prev) => {
           if (prev + 1 >= 5) {
-            stopRecording();
+            stopRecording(); // Auto-stop at 10 seconds
             return 5;
           }
           return prev + 1;
@@ -95,22 +88,79 @@ const Pronounce = () => {
       }, 1000);
     } catch (err) {
       console.error("Error accessing microphone:", err);
-      setUploadStatus("Error: Could not access microphone. Please check permissions.");
+      setUploadStatus("Error: Could not access microphone");
     }
   };
 
   const stopRecording = async () => {
     try {
-      if (!mediaRecorderRef.current || !mediaStreamRef.current) return;
+      if (!audioContextRef.current || !scriptNodeRef.current) return;
 
-      mediaRecorderRef.current.stop();
       mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      scriptNodeRef.current.disconnect();
+      audioContextRef.current.close();
+
+      const wavBlob = encodeWAV(
+        audioDataRef.current,
+        audioContextRef.current.sampleRate
+      );
 
       setIsRecording(false);
       clearInterval(timerRef.current);
+
+      // Automatically send to backend after stopping
+      await sendToBackend(wavBlob);
     } catch (err) {
       console.error("Error stopping recording:", err);
       setUploadStatus("Error stopping recording");
+    }
+  };
+
+  const encodeWAV = (chunks, sampleRate) => {
+    let flat = mergeBuffers(chunks);
+    let buffer = new ArrayBuffer(44 + flat.length * 2);
+    let view = new DataView(buffer);
+
+    writeString(view, 0, "RIFF");
+    view.setUint32(4, 36 + flat.length * 2, true);
+    writeString(view, 8, "WAVE");
+    writeString(view, 12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(view, 36, "data");
+    view.setUint32(40, flat.length * 2, true);
+
+    floatTo16BitPCM(view, 44, flat);
+
+    return new Blob([view], { type: "audio/wav" });
+  };
+
+  const mergeBuffers = (chunks) => {
+    let length = chunks.reduce((acc, cur) => acc + cur.length, 0);
+    let result = new Float32Array(length);
+    let offset = 0;
+    for (let chunk of chunks) {
+      result.set(chunk, offset);
+      offset += chunk.length;
+    }
+    return result;
+  };
+
+  const floatTo16BitPCM = (output, offset, input) => {
+    for (let i = 0; i < input.length; i++, offset += 2) {
+      let s = Math.max(-1, Math.min(1, input[i]));
+      output.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    }
+  };
+
+  const writeString = (view, offset, str) => {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
     }
   };
 
@@ -121,9 +171,7 @@ const Pronounce = () => {
     setUploadStatus("");
 
     const formData = new FormData();
-    // Send with appropriate extension based on mime type
-    const extension = audioBlob.type.includes('webm') ? 'webm' : 'mp4';
-    formData.append("audio", audioBlob, `recording.${extension}`);
+    formData.append("audio", audioBlob, "recording.wav");
     formData.append("reference_text", flashcardSet[currentCard].back_content);
 
     try {
@@ -133,6 +181,7 @@ const Pronounce = () => {
 
       if (response.status === 200) {
         setUploadStatus("Successfully uploaded!");
+        // console.log("Response:", response.data);
         setAssesmentResult(response.data);
       } else {
         setUploadStatus("Upload failed. Please try again.");
@@ -218,14 +267,14 @@ const Pronounce = () => {
     }
   };
 
-  useEffect(() => {
-    const playAudio = async () => {
-      if (flashcardSet[currentCard]?.back_content) {
-        await speakText(flashcardSet[currentCard].back_content, "de-DE");
-      }
-    };
-    playAudio();
-  }, [currentCard, flashcardSet]);
+  // useEffect(() => {
+  //   const playAudio = async () => {
+  //     if (flashcardSet[currentCard]?.back_content) {
+  //       await speakText(flashcardSet[currentCard].back_content, "de-DE");
+  //     }
+  //   };
+  //   playAudio();
+  // }, [currentCard, flashcardSet]);
 
   // Load flashcards
   useEffect(() => {
@@ -242,6 +291,26 @@ const Pronounce = () => {
     };
     getCards();
   }, [user, navigate, pronounce_id]);
+
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (!pronounce_id) return;
+
+      try {
+        const res = await api.get(`/pronounce/progress/${pronounce_id}`);
+        const { current_card_index, completed } = res.data;
+
+        setCurrentCard(current_card_index || 0);
+        setIsCompleted(completed || false);
+      } catch (err) {
+        console.error("Error loading progress:", err);
+        setCurrentCard(0);
+        setIsCompleted(false);
+      }
+    };
+
+    loadProgress();
+  }, [pronounce_id]);
 
   useEffect(() => {
     const progress = ((currentCard + 1) / totalCards) * 100;
@@ -304,23 +373,59 @@ const Pronounce = () => {
   };
 
   // Navigation
-  const handleNext = () => {
+  const handleNext = async () => {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     if (currentCard < totalCards - 1) {
-      setCurrentCard(currentCard + 1);
+      const nextCard = currentCard + 1;
+      setCurrentCard(nextCard);
       setAssesmentResult(null);
       setRecordingTime(0);
       setUploadStatus("");
+
+      try {
+        await api.put(`/pronounce/progress/${pronounce_id}`, {
+          current_card_index: nextCard,
+          completed: false,
+        });
+      } catch (err) {
+        console.error("Error saving progress:", err);
+      }
     }
   };
 
-  const handlePrevious = () => {
+  const handlePrevious = async () => {
     if ("speechSynthesis" in window) window.speechSynthesis.cancel();
     if (currentCard > 0) {
-      setCurrentCard(currentCard - 1);
+      const prevCard = currentCard - 1;
+      setCurrentCard(prevCard);
       setAssesmentResult(null);
       setRecordingTime(0);
       setUploadStatus("");
+
+      try {
+        await api.put(`/pronounce/progress/${pronounce_id}`, {
+          current_card_index: prevCard,
+          completed: false,
+        });
+      } catch (err) {
+        console.error("Error saving progress:", err);
+      }
+    }
+  };
+
+  const handleFinish = async () => {
+    try {
+      await api.put(`/pronounce/progress/${pronounce_id}`, {
+        current_card_index: totalCards - 1,
+        completed: true,
+      });
+
+      setIsCompleted(true);
+
+      // Navigate back to selection page
+      navigate(`/pronounce/${prof_level}`);
+    } catch (err) {
+      console.error("Error marking as complete:", err);
     }
   };
 
@@ -339,7 +444,7 @@ const Pronounce = () => {
           <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
             <button
               onClick={() => navigate(`/pronounce/${prof_level}`)}
-              className="text-slate-600 hover:text-slate-800 flex items-center gap-2"
+              className="text-slate-600 hover:text-slate-800 flex items-center gap-2 z-50 cursor-pointer"
             >
               <ChevronLeft className="w-5 h-5" /> Back
             </button>
@@ -541,6 +646,7 @@ const Pronounce = () => {
           </div>
 
           {/* Navigation */}
+          {/* Navigation */}
           <div className="flex items-center justify-center gap-4 mt-8">
             <button
               onClick={handlePrevious}
@@ -549,13 +655,25 @@ const Pronounce = () => {
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
-            <button
-              onClick={handleNext}
-              disabled={currentCard === totalCards - 1}
-              className="p-3 rounded-xl bg-white text-slate-700 hover:bg-slate-50 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
+
+            {/* Show "Finish" button on last card, otherwise "Next" */}
+            {currentCard === totalCards - 1 ? (
+              <button
+                onClick={handleFinish}
+                className="px-8 py-3 rounded-xl bg-green-500 text-white hover:bg-green-600 shadow-lg font-semibold flex items-center gap-2"
+              >
+                <CheckCircle2 className="w-5 h-5" />
+                Finish
+              </button>
+            ) : (
+              <button
+                onClick={handleNext}
+                disabled={currentCard === totalCards - 1}
+                className="p-3 rounded-xl bg-white text-slate-700 hover:bg-slate-50 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            )}
           </div>
         </div>
       </div>

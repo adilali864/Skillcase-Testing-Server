@@ -4,10 +4,6 @@ const stream = require("stream");
 const csv = require("csv-parser");
 const { pool } = require("../util/db");
 
-const ffmpeg = require("fluent-ffmpeg");
-const ffmpegPath = require("ffmpeg-static");
-ffmpeg.setFfmpegPath(ffmpegPath);
-
 const { SUBSCRIPTION_KEY, REGION } = require("../config/configuration");
 
 async function asses(req, res) {
@@ -16,26 +12,9 @@ async function asses(req, res) {
   }
 
   try {
-    const inputPath = req.file.path;
-    let wavPath = inputPath.replace(/\.[^.]+$/, ".wav");
-
-    if (!req.file.mimetype?.includes("wav")) {
-      await new Promise((resolve, reject) => {
-        ffmpeg(inputPath)
-          .toFormat("wav")
-          .audioChannels(1)
-          .audioFrequency(16000)
-          .on("end", resolve)
-          .on("error", reject)
-          .save(wavPath);
-      });
-      fs.unlinkSync(inputPath); // Clean up original
-    } else {
-      // Already WAV, just rename path
-      wavPath = inputPath;
-    }
     const { reference_text } = req.body;
-    const audioBuffer = fs.readFileSync(wavPath);
+    const audioPath = req.file.path;
+    const audioBuffer = fs.readFileSync(audioPath);
 
     // Azure Speech Service setup
     const speechConfig = sdk.SpeechConfig.fromSubscription(
@@ -83,14 +62,14 @@ async function asses(req, res) {
 
           console.log("German Pronunciation Assessment:", finalResult);
 
-          fs.unlinkSync(wavPath);
+          fs.unlinkSync(audioPath);
 
           return res.json({
             message: "German pronunciation assessment completed successfully.",
             result: finalResult,
           });
         } else if (result.reason === sdk.ResultReason.NoMatch) {
-          fs.unlinkSync(wavPath);
+          fs.unlinkSync(audioPath);
           return res.status(400).json({
             error: "No recognizable speech detected in the audio.",
           });
