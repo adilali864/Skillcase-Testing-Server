@@ -145,4 +145,22 @@ async function me(req, res) {
   }
 }
 
-module.exports = { login, signup, me };
+async function saveFcmToken(req, res) {
+  const { fcmToken } = req.body;
+  const { user_id } = req.user;
+  if (!fcmToken) {
+    return res.status(400).json({ msg: "FCM token is required" });
+  }
+  try {
+    await pool.query("UPDATE app_user SET fcm_token = $1 WHERE user_id = $2", [
+      fcmToken,
+      user_id,
+    ]);
+    res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Error saving FCM token" });
+  }
+}
+
+module.exports = { login, signup, me, saveFcmToken };

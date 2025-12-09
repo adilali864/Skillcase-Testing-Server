@@ -14,6 +14,7 @@ const pdfRoutes = require("./routes/pdfRouter");
 const uploadRouter = require("./routes/uploadRouter");
 const conversationRouter = require("./routes/conversationRouter");
 const conversationAdminRouter = require("./routes/conversationAdminRouter");
+const notificationRouter = require("./routes/notificationRouter");
 
 const {
   authMiddleware,
@@ -33,7 +34,7 @@ const allowed_origins = [
   "https://learner.skillcase.in",
   "https://skillcase-terms-and-condition.vercel.app",
   "https://skillcase-testing-server.vercel.app",
-  
+
   "capacitor://localhost",
   "https://localhost",
   "http://localhost",
@@ -77,6 +78,13 @@ app.use(
   authMiddleware,
   authorizeRole("admin"),
   conversationAdminRouter
+);
+
+app.use(
+  "/api/notifications",
+  authMiddleware,
+  authorizeRole("admin"),
+  notificationRouter
 );
 
 app.listen(3000, () => {

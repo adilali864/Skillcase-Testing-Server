@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { BookOpen, FileText, Video, ArrowRight, Menu, X } from "lucide-react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
 import AddFlashSet from "./pages/AddFlashSetPage";
 import Navbar from "./components/Navbar";
@@ -28,6 +28,8 @@ import StoryPage from "./pages/StoryPage";
 if (typeof global === "undefined") {
   window.global = window;
 }
+import { App as CapacitorApp } from "@capacitor/app";
+
 import "./dashboard-src/css/style.css";
 
 import ResumePage from "./pages/ResumePage";
@@ -37,10 +39,33 @@ import MyResumes from "./pages/MyResumes";
 import ConversationSelect from "./pages/ConversationSelect";
 import ConversationPlayer from "./pages/ConversationPlayer";
 import NursingGermanyLanding from "./pages/NursingGermanyLanding";
+import FallbackPage from "./pages/FallbackPage";
+import AddNotifications from "./pages/AddNotifications";
+import { initPushNotifications } from "./notifications/pushNotifications";
 
 export default function App() {
   const dispatch = useDispatch();
   const { token, user } = useSelector((state) => state.auth);
+
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const backButtonListener = CapacitorApp.addListener(
+      "backButton",
+      ({ canGoBack }) => {
+        if (canGoBack) {
+          window.history.back();
+        } else {
+          CapacitorApp.minimizeApp();
+        }
+      }
+    );
+    return () => {
+      backButtonListener.remove();
+    };
+  }, []);
+
   useEffect(() => {
     const fetchUser = async () => {
       if (token && !user) {
@@ -56,8 +81,19 @@ export default function App() {
     fetchUser();
   }, [token, user, dispatch]);
 
+  // Initialize push notifications and streak reminder when user is logged in
+  useEffect(() => {
+    if (token) {
+      initPushNotifications();
+      // Import dynamically to avoid issues on web
+      import("./notifications/localNotifications").then(({ scheduleStreakReminder }) => {
+        scheduleStreakReminder();
+      });
+    }
+  }, [token]);
+
   return (
-    <BrowserRouter>
+    <>
       <ConditionalNav />
 
       <Routes>
@@ -97,9 +133,11 @@ export default function App() {
           element={<ConversationPlayer />}
         />
         <Route path="/nursing-germany" element={<NursingGermanyLanding />} />
+        <Route path="/open-app" element={<FallbackPage />} />
+        <Route path="/notification" element={<AddNotifications />} />
       </Routes>
       <ConditionalFooter />
-    </BrowserRouter>
+    </>
   );
 }
 function ConditionalFooter() {

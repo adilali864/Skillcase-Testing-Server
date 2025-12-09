@@ -69,6 +69,10 @@ const createConversation = async (req, res) => {
     });
 
     await Promise.all(sentenceInserts);
+    await notifyAllUsers(
+      "📖 New Conversation Added!",
+      `Check out: ${conversationData.title}`
+    );
 
     res.status(201).json({
       success: true,
