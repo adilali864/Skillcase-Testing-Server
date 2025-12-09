@@ -1,7 +1,7 @@
 const admin = require("firebase-admin");
 const { pool } = require("../util/db");
 
-// Production: use base64 env var, Local: use JSON file
+
 let serviceAccount;
 if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
   const jsonString = Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf-8');
