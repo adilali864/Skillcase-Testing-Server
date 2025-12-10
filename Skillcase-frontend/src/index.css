@@ -1,5 +1,10 @@
 @import "tailwindcss";
 
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-top: constant(safe-area-inset-top);
+}
+
 .perspective-1000 {
   perspective: 1000px;
 }

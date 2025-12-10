@@ -45,6 +45,7 @@ import { initPushNotifications } from "./notifications/pushNotifications";
 
 import { StatusBar, Style } from "@capacitor/status-bar";
 import { Capacitor } from "@capacitor/core";
+import { Fullscreen } from "@boengli/capacitor-fullscreen";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -95,13 +96,16 @@ export default function App() {
     }
   }, [token]);
 
-  // useEffect(() => {
-  //   if (Capacitor.isNativePlatform()) {
-  //     StatusBar.setOverlaysWebView({ overlay: false });
-  //     StatusBar.setBackgroundColor({ color: "#143A72" });
-  //     StatusBar.setStyle({ style: Style.Light });
-  //   }
-  // }, []);
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setOverlaysWebView({ overlay: false });
+      StatusBar.setBackgroundColor({ color: "#FFFFFF" });
+      StatusBar.setStyle({ style: Style.Dark });
+    }
+    if (Capacitor.isNativePlatform()) {
+      Fullscreen.activateImmersiveMode();
+    }
+  }, []);
 
   return (
     <>

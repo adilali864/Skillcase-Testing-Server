@@ -16,7 +16,7 @@ export const scheduleStreakReminder = async () => {
         title: "Keep Your Streak Alive!",
         body: "Dont break your learning streak! Practice for just 5 minutes today.",
         schedule: {
-          at: new Date(Date.now() + 30 * 1000), //24 hours,
+          at: new Date(Date.now() + 60 * 60 * 1000), //1 hour,
           allowWhileIdle: true,
         },
         smallIcon: "ic_launcher",
